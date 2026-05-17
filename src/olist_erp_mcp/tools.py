@@ -138,3 +138,88 @@ def create_agent_task(
         .execute()
     )
     return response.data[0]
+
+def list_open_tasks_for_entity(
+    entity_type: str,
+    entity_id: str,
+    limit: int = 20,
+) -> list[dict[str, Any]]:
+    """
+    List open agent tasks for a specific business entity.
+
+    This is used for duplicate prevention. Before the agent creates a
+    new task for an order, invoice, support case, or seller, it can check
+    whether an open task already exists.
+    """
+    response = (
+        supabase
+        .table("agent_tasks")
+        .select("*")
+        .eq("entity_type", entity_type)
+        .eq("entity_id", entity_id)
+        .eq("status", "open")
+        .order("created_at", desc=True)
+        .limit(limit)
+        .execute()
+    )
+    return response.data
+
+
+def list_notes_for_entity(
+    entity_type: str,
+    entity_id: str,
+    limit: int = 20,
+) -> list[dict[str, Any]]:
+    """
+    List recent notes for a specific business entity.
+
+    This gives the agent historical context about prior reviews,
+    escalations, or actions taken on the same record.
+    """
+    response = (
+        supabase
+        .table("agent_notes")
+        .select("*")
+        .eq("entity_type", entity_type)
+        .eq("entity_id", entity_id)
+        .order("created_at", desc=True)
+        .limit(limit)
+        .execute()
+    )
+    return response.data
+
+
+def update_agent_task_status(
+    task_id: int,
+    status: str,
+) -> dict[str, Any]:
+    """
+    Update the status of an existing agent task.
+
+    Example statuses:
+    - open
+    - in_progress
+    - closed
+    - cancelled
+
+    This lets future workflows manage task lifecycle instead of only
+    creating new tasks.
+    """
+    response = (
+        supabase
+        .table("agent_tasks")
+        .update({
+            "status": status,
+        })
+        .eq("id", task_id)
+        .execute()
+    )
+
+    if not response.data:
+        return {
+            "error": "No task found or updated",
+            "task_id": task_id,
+            "status": status,
+        }
+
+    return response.data[0]

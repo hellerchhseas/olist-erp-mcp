@@ -13,6 +13,9 @@ from src.olist_erp_mcp.tools import (
     list_high_risk_sellers,
     list_invoice_exceptions,
     list_late_shipments,
+    list_open_tasks_for_entity,
+    list_notes_for_entity,
+    update_agent_task_status
 )
 
 mcp = FastMCP("olist-erp-mcp")
@@ -127,6 +130,60 @@ def create_agent_task_tool(
         entity_id=entity_id,
         description=description,
         priority=priority,
+    )
+
+@mcp.tool()
+def list_open_tasks_for_entity_tool(
+    entity_type: str,
+    entity_id: str,
+    limit: int = 20,
+) -> list[dict[str, Any]]:
+    """
+    List open agent tasks for a specific business entity.
+
+    Use this before creating a new task to avoid duplicate open tasks
+    for the same order, invoice, customer, seller, shipment, or support case.
+    """
+    return list_open_tasks_for_entity(
+        entity_type=entity_type,
+        entity_id=entity_id,
+        limit=limit,
+    )
+
+
+@mcp.tool()
+def list_notes_for_entity_tool(
+    entity_type: str,
+    entity_id: str,
+    limit: int = 20,
+) -> list[dict[str, Any]]:
+    """
+    List recent agent notes for a specific business entity.
+
+    Use this when the user asks what has already been observed,
+    reviewed, or documented for a record.
+    """
+    return list_notes_for_entity(
+        entity_type=entity_type,
+        entity_id=entity_id,
+        limit=limit,
+    )
+
+
+@mcp.tool()
+def update_agent_task_status_tool(
+    task_id: int,
+    status: str,
+) -> dict[str, Any]:
+    """
+    Update the status of an existing agent task.
+
+    Use this when a task should be marked open, in_progress, closed,
+    or cancelled.
+    """
+    return update_agent_task_status(
+        task_id=task_id,
+        status=status,
     )
 
 
